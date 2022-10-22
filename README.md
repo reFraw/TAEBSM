@@ -21,8 +21,8 @@ Additional dependencies required for operation are contained in the 'requirement
 The first execution of the programme, which can be called up via the help, allows the creation of the input directory, into which the NIFTI images to be processed are to be inserted.  
 Once the files to be processed have been inserted, the script can be called again by specifying the following parameters:
 
-1) Voxel size (-v) | Voxel size for image resampling. The default value is 2 $mm^3$.
-2) Fractional intensity treshold (-f) |
+1) Voxel size (-v) | Voxel size for image resampling. The default value is 2 mm.
+2) Fractional intensity treshold (-f) | Threshold for brain mass extraction, must be between 0 and 1. Higher values may lead to loss of brain mass during extraction. The default value is 0.5.
 3) BET mode (-m) |
 4) Degree of freedom (-d) |
 5) Atlas (-a) |
