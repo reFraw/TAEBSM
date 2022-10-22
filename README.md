@@ -21,7 +21,7 @@ Additional dependencies required for operation are contained in the 'requirement
 The first execution of the programme, which can be called up via the help, allows the creation of the input directory, into which the NIFTI images to be processed are to be inserted.  
 Once the files to be processed have been inserted, the script can be called again by specifying the following parameters:
 
-1) Voxel size (-v) | Voxel size for image resampling. The default value is 2 mm^3.
+1) Voxel size (-v) | Voxel size for image resampling. The default value is 2 $mm^3$.
 2) Fractional intensity treshold (-f) |
 3) BET mode (-m) |
 4) Degree of freedom (-d) |
