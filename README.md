@@ -11,6 +11,8 @@ The script operates using the BET (Brain Extraction Tool) and FLIRT (FMRIB's Lin
 3) Linear registration of the images via FLIRT.
 4) Extraction of the anatomical views and reduction of the background portion.
 
+Registration is carried out on the standard MNI152 space.  
+
 ## 2. Dependencies
 
 ## 3. Usage
