@@ -23,7 +23,7 @@ Once the files to be processed have been inserted, the script can be called agai
 
 1) Voxel size (-v) | Voxel size for image resampling. The default value is 2 mm.
 2) Fractional intensity treshold (-f) | Threshold for brain mass extraction, must be between 0 and 1. Higher values may lead to loss of brain mass during extraction. The default value is 0.5.
-3) BET mode (-m) |
-4) Degree of freedom (-d) |
-5) Atlas (-a) |
-6) Image size (-i) |
+3) BET mode (-m) | Mode of brain mass extraction by FSL. There are two options, B (Reduce Bias and Neck) and R (Robust Brain Centre Extimation). The default value is R.
+4) Degree of freedom (-d) | Degrees of freedom for linear recording via FLIRT. You can choose between 6 (rigid body), 9 (standard) and 12 (affine).
+5) Atlas (-a) | Reference atlas for linear registration via FLIRT. You can choose between MNI152 with 1 mm isotropic resolution or 2 mm isotropic resolution.
+6) Image size (-i) |Size of images extracted from the MRI in SIZExSIZE format. The default value is 224 px.
