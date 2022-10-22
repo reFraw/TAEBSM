@@ -1,5 +1,4 @@
-# TAEBSM
-## Tool for Automated Extraction of Brain Slices from MRI scans
+# TAEBSM - Tool for Automated Extraction of Brain Slices from MRI scans
 
 ## 1. Description
 
