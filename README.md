@@ -22,3 +22,8 @@ The first execution of the programme, which can be called up via the help, allow
 Once the files to be processed have been inserted, the script can be called again by specifying the following parameters:
 
 1) Voxel size (-v) |
+2) Fractional intensity treshold (-f) |
+3) BET mode (-m) |
+4) Degree of freedom (-d) |
+5) Atlas (-a) |
+6) Image size (-i) |
