@@ -14,5 +14,11 @@ The script operates using the BET (Brain Extraction Tool) and FLIRT (FMRIB's Lin
 Registration is carried out on the standard MNI152 space.  
 
 ## 2. Dependencies
+FSL installation is required to use the tool. To use the tool on Windows operating systems, use WSL (Windows Subsystem for Linux).  
+Additional dependencies required for operation are contained in the 'requirements.txt' file.
 
 ## 3. Usage
+The first execution of the programme, which can be called up via the help, allows the creation of the input directory, into which the NIFTI images to be processed are to be inserted.  
+Once the files to be processed have been inserted, the script can be called again by specifying the following parameters:
+
+1) Voxel size (-v) |
