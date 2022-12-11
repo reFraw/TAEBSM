@@ -4,12 +4,14 @@ import datetime
 import SimpleITK as sitk
 import cv2
 import matplotlib.pyplot as plt
+import shutil
 
 from utils.utils import fslBET
 from utils.utils import fslFLIRT
 from utils.utils import resample_image
 from utils.utils import anatomical_views_extraction
 from utils.utils import reduce_background
+from utils.utils import Bcolors
 
 from tqdm.contrib import tzip
 from tqdm import tqdm
@@ -97,12 +99,11 @@ def make_dirs():
 	mat_path = os.path.join(ROOT, 'mat_files')
 	resampled_path = os.path.join(ROOT, 'resampled_files')
 	antomical_views_path = os.path.join(ROOT, 'anatomical_views')
+	exceptions_path = os.path.join(ROOT, 'exceptions/')
+
 	
 	if not os.path.exists(mat_path):
 		os.makedirs(mat_path)
-
-	if not os.path.exists(resampled_path):
-		os.makedirs(resampled_path)
 
 	if not os.path.exists(output_path):
 		os.makedirs(output_path)
@@ -110,7 +111,22 @@ def make_dirs():
 	if not os.path.exists(antomical_views_path):
 		os.makedirs(antomical_views_path)
 
+	if not os.path.exists(exceptions_path):
+		os.makedirs(exceptions_path)
+
+
+
 if __name__ == '__main__':
+
+	ROOT = os.path.abspath(__file__)
+	FILENAME = os.path.basename(__file__)
+	ROOT = ROOT.replace(FILENAME, '')
+
+	output_path = os.path.join(ROOT, 'output_files')
+	mat_path = os.path.join(ROOT, 'mat_files')
+	antomical_views_path = os.path.join(ROOT, 'anatomical_views')
+	input_path = os.path.join(ROOT, 'input_files')
+	exceptions_path = os.path.join(ROOT, 'exceptions/')
 
 	# ========== Make dirs at first execution ========== 
 	make_input_folder()
@@ -120,68 +136,88 @@ if __name__ == '__main__':
 	# ========== Start ========== #
 	make_dirs()
 	start_time = datetime.datetime.now()
-	print('\n\n[*] Starting process at {}'.format(start_time))
+	num_nifti = len(os.listdir(input_path))
+	print(Bcolors.OKCYAN + '\n\n[*] Starting process at {}'.format(start_time) + Bcolors.ENDC)
 
-	
-	# ========== Get input and output file names ========== 
-	input_files = get_input_file()
-	output_files = get_output_file(input_files)
-	mat_files = get_mat_file(input_files)
-	resampled_files = get_resampled_file(input_files)
+	for idx, file in enumerate(os.listdir(input_path)):
 
+		# Get MRI ID
+		filename = file.split('.')[0]
+		image_input_path = os.path.join(input_path, file)
 
-	# ========== Resampling Images ========== 
-	print('\n[*] Starting Resampling Images...\n')
-	for inp, res in tzip(input_files, resampled_files):
-		inp_image = sitk.ReadImage(inp)
+		try:
+			print('\n[*] Processing file {} ({} of {})'.format(file, idx + 1, num_nifti))
 
-		res_image = resample_image(inp_image, out_spacing=[arguments.voxel_size,
-															arguments.voxel_size,
-															arguments.voxel_size])
+			# Define output image and mat file path
 
-		sitk.WriteImage(res_image, res)
-	print('\n[#] Resampled finished.')
+			image_output_path = filename + '_final.nii.gz'
+			image_output_path = os.path.join(output_path, image_output_path)
 
+			mat_output_path = os.path.join(mat_path, filename + '_final.mat')
 
-	# ========== BET Brain Extraction ========== 
-	print('\n[*] Starting BET Extraction...\n')
-	for inp, out in tzip(resampled_files, output_files):
-		fslBET(inp, out, arguments.frac, arguments.BET_mode)
-		os.remove(inp)
-	os.rmdir('resampled_files/')
-	mask_file = [file for file in os.listdir('output_files/') if '_mask' in file]
-	mask_file = [os.path.join('output_files/', file) for file in mask_file]
-	for file in mask_file:
-		os.remove(file)
-	print('\n[#] BET Extraction finished.')
+			# Resampling to isotropic voxel size
+			sitk_image = sitk.ReadImage(image_input_path)
+			resampled_image = resample_image(sitk_image, out_spacing=[arguments.voxel_size, 
+																		arguments.voxel_size,
+																		arguments.voxel_size])
 
+			sitk.WriteImage(resampled_image, image_output_path)
+			print(Bcolors.OKGREEN + '	[*] Resampling finished' + Bcolors.ENDC)
 
-	# ========== FLIRT Linear Registration ========== 
-	print('\n[*] Starting FLIRT Registration...\n')
-	for inp, mat in tzip(output_files, mat_files):
-		fslFLIRT(inp, inp, arguments.dof, mat,arguments.atlas)
-	print('\n[#] FLIRT Registration finished.')
+			# Starting brain volume extraction through BET Tool and Nipype interfaces
+			fslBET(image_output_path, image_output_path, arguments.frac, arguments.BET_mode)
 
+			# Check if the BET extraction was successful
+			checkfiles = [file for file in os.listdir(output_path) if filename in file]
 
-	# ========== Extraction of Anatomical Views ==========
-	print('\n[*] Starting Extraction of Anatomical Views...\n')
+			if len(checkfiles) > 2:
+				checkfiles = [os.path.join(output_path, file) for file in checkfiles]
+				print(Bcolors.FAIL + '	[*] BET extraction failed' + Bcolors.ENDC)
 
-	for file in tqdm(output_files):
-		anatomical_views_extraction(file)
+				for file in checkfiles:
+					os.remove(file)
 
-	dirs_ID = [dirs for dirs in os.listdir('anatomical_views/')]
-	for directory in dirs_ID:
-		base_path = os.path.join('anatomical_views/', directory)
-		for image in os.listdir(base_path):
-			image_path = os.path.join(base_path, image)
-			reduced_img = reduce_background(image_path)
-			reduced_img = cv2.resize(reduced_img,
-										dsize=(arguments.image_size, arguments.image_size),
-										interpolation=cv2.INTER_CUBIC)
-			plt.imsave(image_path, reduced_img)
+				except_path = os.path.join(exceptions_path, filename + '.nii')
+				shutil.move(image_input_path, except_path)
 
-	print('\n[#] Extraction of Anatomical Views finished.\n')
+				continue
+
+			print(Bcolors.OKGREEN + '	[*] BET extraction finished' + Bcolors.ENDC)
+
+			# Starting linear registration through FLIRT Tool and Nipype interfaces
+			fslFLIRT(image_output_path, image_output_path, arguments.dof, mat_output_path, arguments.atlas)
+			print(Bcolors.OKGREEN + '	[*] FLIRT registration finished' + Bcolors.ENDC)
+
+			# Extraction of anatomical views
+			anatomical_views_extraction(image_output_path, arguments.image_size)
+			print(Bcolors.OKGREEN + '	[*] Views extracion finished' + Bcolors.ENDC)
+
+			# Remove mask file
+			maskfiles = [os.path.join(output_path, file) for file in os.listdir(output_path) if '_mask' in file]
+			for maskfile in maskfiles:
+				os.remove(maskfile)
+
+		except Exception as err:
+
+			except_path = os.path.join(exceptions_path, filename + '.nii')
+			shutil.move(image_input_path, except_path)
+
+			print(Bcolors.FAIL + '[#] ERROR AT FILE {} ||| error : {}'.format(filename, err) + Bcolors.ENDC)
+
+			trashfiles = [file for file in os.listdir(output_path) if file.startswith(filename)]
+			trashfiles = [os.path.join(output_path, file) for file in trashfiles]
+
+			for trashfile in trashfiles:
+				os.remove(trashfile)
+
+			pass
 
 	exec_time = datetime.datetime.now() - start_time
-	print('[#] Total Exec Time {}\n\n'.format(exec_time))
-	
+	print(Bcolors.OKCYAN + '\n[#] Total Exec Time {}\n\n'.format(exec_time) + Bcolors.ENDC)
+	perint(Bcolors.OKCYAN + 'No of exceptions : {}'.format(len(os.listdir(exceptions_path))) + Bcolors.ENDC)
+
+
+
+
+
+
