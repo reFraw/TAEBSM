@@ -9,6 +9,17 @@ import imutils
 
 from nipype.interfaces import fsl
 
+class Bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 
 def resample_image(itk_image, out_spacing=[2.0, 2.0, 2.0]):
 
@@ -72,7 +83,7 @@ def fslFLIRT(inp_file, out_file, dof, mat_file, atlas):
 	return result
 
 
-def anatomical_views_extraction(file_path):
+def anatomical_views_extraction(file_path, image_size):
 
 	fileID = file_path.split('/')[-1]
 	fileID = fileID.split('.')[0]
@@ -84,12 +95,15 @@ def anatomical_views_extraction(file_path):
 	index = np.asarray(Image.shape) // 2
 
 	axial_view = Image[index[0], :, :]
+	axial_view = cv2.resize(axial_view, (image_size, image_size))
 
 	coronal_view = Image[:, index[1], :]
 	coronal_view = cv2.flip(coronal_view, 0)
+	coronal_view = cv2.resize(coronal_view, (image_size, image_size))
 
 	sagittal_view = Image[:, :, index[2]]
 	sagittal_view = cv2.flip(sagittal_view, 0)
+	sagittal_view = cv2.resize(sagittal_view, (image_size, image_size))
 
 	save_path = os.path.join('anatomical_views', fileID)
 
@@ -109,7 +123,7 @@ def reduce_background(image_path):
     
     img = cv2.imread(image_path)
     
-    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray, (5, 5), 0)
     
     thresh = cv2.threshold(gray, 45, 255, cv2.THRESH_BINARY)[1]
