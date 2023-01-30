@@ -213,8 +213,8 @@ if __name__ == '__main__':
 			pass
 
 	exec_time = datetime.datetime.now() - start_time
-	print(Bcolors.OKCYAN + '\n[#] Total Exec Time {}\n\n'.format(exec_time) + Bcolors.ENDC)
-	perint(Bcolors.OKCYAN + 'No of exceptions : {}'.format(len(os.listdir(exceptions_path))) + Bcolors.ENDC)
+	print(Bcolors.OKCYAN + '\n[#] Total Exec Time {}\n'.format(exec_time) + Bcolors.ENDC)
+	print(Bcolors.OKCYAN + 'No of exceptions : {}\n\n'.format(len(os.listdir(exceptions_path))) + Bcolors.ENDC)
 
 
 
